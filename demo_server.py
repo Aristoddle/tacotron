@@ -4,6 +4,10 @@ from hparams import hparams, hparams_debug_string
 import os
 from synthesizer import Synthesizer
 
+from sanic import Sanic
+from sanic.exceptions import RequestTimeout
+from sanic.request import Request
+from sanic.response import json
 
 html_body = '''<html><title>Demo</title>
 <style>
@@ -57,25 +61,15 @@ function synthesize(text) {
 '''
 
 
-class UIResource:
-  def on_get(self, req, res):
-    res.content_type = 'text/html'
-    res.body = html_body
-
-
-class SynthesisResource:
-  def on_get(self, req, res):
-    if not req.params.get('text'):
-      raise falcon.HTTPBadRequest()
-    res.data = synthesizer.synthesize(req.params.get('text'))
-    res.content_type = 'audio/wav'
-
-
 synthesizer = Synthesizer()
-api = falcon.API()
-api.add_route('/synthesize', SynthesisResource())
-api.add_route('/', UIResource())
 
+app = Sanic()
+
+@app.route("/<query>", methods=['GET'])
+async def on_get(request: Request, query: str):
+    data = await synthesizer.synthesize(query)
+    content_type = 'audio/wav'
+    return json({'content_type': content_type, 'data':data})
 
 if __name__ == '__main__':
   from wsgiref import simple_server
@@ -90,6 +84,7 @@ if __name__ == '__main__':
   print(hparams_debug_string())
   synthesizer.load(args.checkpoint)
   print('Serving on port %d' % args.port)
-  simple_server.make_server('0.0.0.0', args.port, api).serve_forever()
+  app.run(host='0.0.0.0', port=args.port)
+
 else:
   synthesizer.load(os.environ['CHECKPOINT'])
