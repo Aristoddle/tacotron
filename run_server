@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "EXECUTING python3 demo_server.py --checkpoint /tmp/tacotron-20170720/model.ckpt ..."
+python3 demo_server.py --checkpoint /tmp/tacotron-20170720/model.ckpt
+
