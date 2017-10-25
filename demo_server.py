@@ -67,9 +67,9 @@ app = Sanic()
 
 @app.route("/<query>", methods=['GET'])
 async def on_get(request: Request, query: str):
-    data = await synthesizer.synthesize(query)
+    data = synthesizer.synthesize(query)
     content_type = 'audio/wav'
-    return json({'content_type': content_type, 'data':data})
+    await json({'content_type': content_type, 'data':data})
 
 if __name__ == '__main__':
   from wsgiref import simple_server
